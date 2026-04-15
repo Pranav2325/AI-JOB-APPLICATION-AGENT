@@ -1,32 +1,33 @@
-import time
-from typing import List
-from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
+import time ##time-related functions
+from typing import List #used for type hints
+from bs4 import BeautifulSoup #html parser
+from selenium import webdriver #needed to control browser programatically
+from selenium.webdriver.chrome.service import Service #helps properly start/stop driver
+from selenium.webdriver.chrome.options import Options #configure headless mode,user-agent,anti-detection tricks
+from webdriver_manager.chrome import ChromeDriverManager #automatically installs chromedriver
 from app.models import Job
 
 
-def create_driver()-> webdriver.Chrome:
-    chrome_options=Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+def create_driver()-> webdriver.Chrome: #returns a configured chrome driver
+    chrome_options=Options() #create options object
+    chrome_options.add_argument("--headless") #runs browser without ui
+    chrome_options.add_argument("--no-sandbox") #disable sandboxing
+    chrome_options.add_argument("--disable-dev-shm-usage")#fix shared meomeory usage 
+    chrome_options.add_argument("--disable-blink-features=AutomationControlled") #helps to avoid bot detection
+    #disable extra detections
     chrome_options.add_experimental_option("excludeSwitches",["enable-automation"])
     chrome_options.add_experimental_option("useAutomationExtension",False)
-    chrome_options.add_argument(
+    chrome_options.add_argument( #make request like real user
         "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/120.0.0.0 Safari/537.36"
     )
     
-    service=Service(ChromeDriverManager().install())
-    driver=webdriver.Chrome(service=service,options=chrome_options)
+    service=Service(ChromeDriverManager().install()) #install chromedriver 
+    driver=webdriver.Chrome(service=service,options=chrome_options) #lauch browser
     
     driver.execute_script(
-        "Object.defineProperty(navigator,'webdriver',{get:()=>undefined})"
+        "Object.defineProperty(navigator,'webdriver',{get:()=>undefined})"#to hide bots
     )
     return driver
 
@@ -41,7 +42,7 @@ INDEED_DOMAINS = {
 
 def scrape_indeed_jobs(job_title:str,location:str, max_jobs:int=20,country: str = "india")->List[Job]:
     jobs=[]
-    driver=None
+    driver=None #intializae driver variable 
     
     try:
         print("Starting browser...")
@@ -56,13 +57,13 @@ def scrape_indeed_jobs(job_title:str,location:str, max_jobs:int=20,country: str 
         url = f"https://{domain}/jobs?q={search_term}&l={location_term}"
 
         print(f"Navigating to: {url}")
-        driver.get(url)
+        driver.get(url) #loads job page
         
         print("⏳ Waiting for page to fully load...")
-        time.sleep(6)
+        time.sleep(6) 
         
         
-        soup=BeautifulSoup(driver.page_source,"html.parser")      
+        soup=BeautifulSoup(driver.page_source,"html.parser")  #parse page HTML   
         job_cards=soup.find_all("div",class_="job_seen_beacon")
         print(f"Found {len(job_cards)} job cards on page")
         
@@ -101,7 +102,7 @@ def scrape_indeed_jobs(job_title:str,location:str, max_jobs:int=20,country: str 
            
     except Exception as e:
         print(f"Request failed:{e}")
-    finally:
+    finally: #close browser
         if driver:
             driver.quit()
             print("Browser closed")

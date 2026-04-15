@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional 
+from pydantic import BaseModel #it is used to create schemas
+from typing import Optional # give optional or none 
 
 class Job(BaseModel):
     title: str
@@ -9,3 +9,12 @@ class Job(BaseModel):
     description: Optional[str]=None
     url:str
     source:str
+    
+    
+'''
+requests- HTTP requests
+bs4- HTML parser 
+selenium- Browser automation
+webdriver-manager- automatically download chromedriver
+pydantic -data modelling
+'''
