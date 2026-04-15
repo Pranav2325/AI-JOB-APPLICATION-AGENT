@@ -29,9 +29,17 @@ def create_driver()-> webdriver.Chrome:
         "Object.defineProperty(navigator,'webdriver',{get:()=>undefined})"
     )
     return driver
+
+INDEED_DOMAINS = {
+    "us": "www.indeed.com",
+    "india": "in.indeed.com",
+    "uk": "uk.indeed.com",
+    "australia": "au.indeed.com",
+    "canada": "ca.indeed.com",
+}
     
 
-def scrape_indeed_jobs(job_title:str,location:str, max_jobs:int=20)->List[Job]:
+def scrape_indeed_jobs(job_title:str,location:str, max_jobs:int=20,country: str = "india")->List[Job]:
     jobs=[]
     driver=None
     
@@ -44,7 +52,8 @@ def scrape_indeed_jobs(job_title:str,location:str, max_jobs:int=20)->List[Job]:
         search_term=job_title.replace(" ","+")
         location_term=location.replace(" ","+")
 
-        url=f"https://www.indeed.com/jobs?q={search_term}&l={location_term}"
+        domain = INDEED_DOMAINS.get(country.lower(), "in.indeed.com")
+        url = f"https://{domain}/jobs?q={search_term}&l={location_term}"
 
         print(f"Navigating to: {url}")
         driver.get(url)
