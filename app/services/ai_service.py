@@ -133,7 +133,61 @@ def tailor_resume(resume: str,job_description:str,job_title:str)->dict:
             "ats_score_estimate": 0,
             "error": str(e)
         }
+        
+def generate_cover_letter(resume:str,job_description:str,job_title:str,applicant_name:str)->dict:
+    system_prompt="""
+    You are an expert career coach who writes 
+    compelling, specific cover letters.
+    Rules you must follow:
+    - Keep it under 300 words
+    - Never use generic phrases like 'I am a hard worker'
+    - Reference specific details from the job description
+    - Connect candidate's actual experience to job requirements
+    - Sound human and confident, not robotic
+    - Respond ONLY with valid JSON, no markdown, no code blocks.
+    Start directly with { and end with }.
     
+    """
+    
+    user_prompt=f"""
+    APPLICANT NAME: {applicant_name}
+    JOB TITLE: {job_title}
+
+    JOB DESCRIPTION:
+    {job_description}
+
+    APPLICANT RESUME:
+    {resume}
+
+    Write a compelling cover letter for this specific job.
+    Return ONLY this JSON structure:
+    {{
+        "cover_letter": "the complete cover letter as a single string with newlines as \\n",
+        "word_count": <number of words in the cover letter>,
+        "key_points_addressed": ["point1", "point2", "point3"]
+    }}
+    """
+    try:
+        raw_response=ask_ai(system_prompt,user_prompt)
+        cleaned=clean_json_response(raw_response)
+        result=json.loads(cleaned)
+        return result
+    except json.JSONDecodeError:
+        return{
+            "cover_letter": "",
+            "word_count": 0,
+            "key_points_addressed": [],
+            "error": "Could not parse AI response",
+            "raw_response": raw_response
+        }
+    except Exception as e:
+        return{
+            "cover_letter": "",
+            "word_count": 0,
+            "key_points_addressed": [],
+            "error": str(e)
+        }
+      
 
 '''
 response- full api result
