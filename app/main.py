@@ -32,5 +32,8 @@ uvicorn app.main:app --reload  its is a web server like node and app.main is mod
 requests - For making HTTP requests (like fetch() in JS)
 BeautifulSoup4 -For reading and parsing HTML (like document.querySelector in JS)
 selenium -For controlling a real browser when JS rendering is needed
+websockets- two way connection
+SSE(server sent events)- one way connection
+use StreamingResponse which use yield to pause connection
 
 '''

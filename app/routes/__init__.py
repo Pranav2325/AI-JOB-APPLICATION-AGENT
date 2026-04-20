@@ -1,17 +1,19 @@
 from fastapi import APIRouter
-from app.services.scraper import scrape_indeed_jobs
+from fastapi.responses import StreamingResponse
+from app.services.scraper import scrape_naukri_jobs
 from app.services.ai_service import match_job_to_resume,tailor_resume,generate_cover_letter
+from app.services.pipeline import run_job_pipeline
 
 
 router=APIRouter()
 
 @router.get("/scrape")
 def scrape_jobs(job_title:str,location:str,max_jobs:int=10,country: str = "india"):
-    jobs=scrape_indeed_jobs(job_title,location,max_jobs,country)
+    jobs=scrape_naukri_jobs(job_title,location,max_jobs,country)
     
     return{
         "total_found":len(jobs),
-        "country":country,
+        "source":"naukri",
         "jobs":[job.dict() for job in jobs]
     }
 
@@ -68,3 +70,30 @@ def cover_letter_route(payload:dict):
         "job_title":job_title,
         "result":result
     }
+@router.get("/pipeline")
+def pipeline_route(
+    job_title: str,
+    location: str,
+    resume: str,
+    applicant_name: str,
+    max_jobs: int = 5,
+    match_threshold: int = 60
+):
+    generator=run_job_pipeline(
+        job_title=job_title,
+        location=location,
+        resume=resume,
+        applicant_name=applicant_name,
+        max_jobs=max_jobs,
+        match_threshold=match_threshold
+    )
+    
+    return StreamingResponse(
+        generator,
+        media_type="text/event-stream",#tell browser it is SSE response
+        headers={
+            "Cache-Control":"no-cache",#every request must be fresh
+            "Connection":"keep-alive",#keep connection open
+            "X-Accel-Buffering":"no" #send each chunk immediately as it arrives
+        }
+    )

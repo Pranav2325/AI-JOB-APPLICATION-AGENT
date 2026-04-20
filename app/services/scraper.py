@@ -31,16 +31,35 @@ def create_driver()-> webdriver.Chrome: #returns a configured chrome driver
     )
     return driver
 
-INDEED_DOMAINS = {
-    "us": "www.indeed.com",
-    "india": "in.indeed.com",
-    "uk": "uk.indeed.com",
-    "australia": "au.indeed.com",
-    "canada": "ca.indeed.com",
-}
+def get_job_description(driver,job_url:str)-> str:
+    try:
+        driver.get(job_url)
+        time.sleep(3)
+        soup=BeautifulSoup(driver.page_source,"html.parser")
+        
+        selectors = [
+            {"class": "styles_JDC__dang-inner-html__h0K4t"},
+            {"class": "jobDescription"},
+            {"class": "job-desc"},
+            {"id": "job-desc"},
+        ]
+        
+        for selector in selectors:
+            elem=soup.find("div",selector)
+            if elem:
+                text=elem.get_text(strip=True,separator=" ")
+                if len(text)>100:
+                    return text
+        with open("debug_page.html", "w", encoding="utf-8") as f: #saves full HTML if extraction fails 
+            f.write(driver.page_source)
+        print(" Saved debug_page.html - description selector not found")
+
+        return ""
+    except Exception as e :
+        print(f"Could not fetch description: {e}")
     
 
-def scrape_indeed_jobs(job_title:str,location:str, max_jobs:int=20,country: str = "india")->List[Job]:
+def scrape_naukri_jobs(job_title:str,location:str, max_jobs:int=20,country: str = "india")->List[Job]:
     jobs=[]
     driver=None #intializae driver variable 
     
@@ -50,51 +69,72 @@ def scrape_indeed_jobs(job_title:str,location:str, max_jobs:int=20,country: str 
 
     
 
-        search_term=job_title.replace(" ","+")
-        location_term=location.replace(" ","+")
+        search_term=job_title.lower().replace(" ","-")
+        location_term=location.lower().replace(" ","-")
 
-        domain = INDEED_DOMAINS.get(country.lower(), "in.indeed.com")
-        url = f"https://{domain}/jobs?q={search_term}&l={location_term}"
+        
+        url = f"https://www.naukri.com/{search_term}-jobs-in-{location_term}"
 
         print(f"Navigating to: {url}")
         driver.get(url) #loads job page
         
         print("⏳ Waiting for page to fully load...")
-        time.sleep(6) 
+        time.sleep(5) 
         
         
         soup=BeautifulSoup(driver.page_source,"html.parser")  #parse page HTML   
-        job_cards=soup.find_all("div",class_="job_seen_beacon")
+        job_cards=soup.find_all("div",class_="srp-jobtuple-wrapper")
         print(f"Found {len(job_cards)} job cards on page")
         
         for card in job_cards[:max_jobs]:
             try:
-                title_elem=card.find("h2",class_="jobTitle")
-                title=title_elem.get_text(strip=True) if title_elem else "No title"
                 
-                company_elem=card.find("span",attrs={"data-testid":"company-name"})
+                title_elem=card.find("a",class_="title")
+                title=title_elem.get_text(strip=True) if title_elem else "No title"
+                job_url=title_elem["href"] if title_elem else url
+                
+                company_elem=card.find("a",class_="comp-name")
                 company=company_elem.get_text(strip=True) if company_elem else "No company"
                 
-                location_elem=card.find("div",attrs={"data-testid":"text-location"})
-                job_location=location_elem.get_text(strip=True) if location_elem else "No location"
+                location_elem=card.find("span",class_="locWdth")
+                job_location=location_elem.get_text(strip=True) if location_elem else location
                 
-                salary_elem=card.find("div",class_="salary-snippet-container")
+                salary_elem=card.find("span",class_="sal")
                 salary=salary_elem.get_text(strip=True) if salary_elem else None
                 
-                link_elem=card.find("a",class_="jcs-JobTitle")
-                job_url=f"https://www.indeed.com{link_elem['href']}" if link_elem else url
+                exp_elem=card.find("span",class_="expwdth")
+                experience=exp_elem.get_text(strip=True) if exp_elem else None
+                
+                desc_elem=card.find("span",class_="job-desc")
+                snippet=desc_elem.get_text(strip=True) if desc_elem else ""
+                
+                skill_elems=card.find_all("li",class_="tag-li")
+                skills=[s.get_text(strip=True) for s in skill_elems]
+                
+                date_elem=card.find("span",class_="job-post-day")
+                posted_date=date_elem.get_text(strip=True) if date_elem else None
+
+                
+                print(f"Fetching full description for: {title}")
+                
+                full_description=get_job_description(driver,job_url)
+                description=full_description if full_description else snippet
 
                 job=Job(
                     title=title,
                     company=company,
                     location=job_location,
                     salary=salary,
+                    experience=experience,
+                    description=description,
+                    skills=skills,
+                    posted_date=posted_date,
                     url=job_url,
-                    source="indeed"   
+                    source="naukri"   
                 )
                 
                 jobs.append(job)
-                print(f"Scraped: {title} at {company}")
+                print(f"Scraped: {title} at {company} | Skills: {skills}")
             except Exception as e:
                 print(f"Error parsing one card: {e}")
                 continue
@@ -109,3 +149,6 @@ def scrape_indeed_jobs(job_title:str,location:str, max_jobs:int=20,country: str 
     
     return jobs
         
+
+    
+    
