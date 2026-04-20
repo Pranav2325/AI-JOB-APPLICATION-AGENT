@@ -36,4 +36,6 @@ websockets- two way connection
 SSE(server sent events)- one way connection
 use StreamingResponse which use yield to pause connection
 
+pipeline working
+
 '''
