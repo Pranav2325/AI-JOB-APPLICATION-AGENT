@@ -55,15 +55,15 @@ def run_job_pipeline(
         )
         description=job.description or f"{job.title} position at {job.company}"
         
-        print(f"🔎 Description preview: {description[:200]}")
-        print(f"🤖 Sending to AI for matching...")
+        print(f" Description preview: {description[:200]}")
+        print(f" Sending to AI for matching...")
         
         match_result=match_job_to_resume(
             resume,
             description,
             job.title
         )
-        print(f"🎯 Raw AI result: {match_result}")
+        print(f" Raw AI result: {match_result}")
         score=match_result.get("match_score",0)
         
         yield make_event(

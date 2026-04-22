@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Job Agent 🤖</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 0 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            font-size: 1rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 16px;
+        }
+
+        textarea {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            padding: 12px;
+            font-size: 0.9rem;
+            resize: vertical;
+            min-height: 150px;
+            font-family: inherit;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            padding: 10px 12px;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status-bar {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #94a3b8;
+            display: none;
+        }
+
+        .status-bar.active {
+            display: block;
+            border-color: #6366f1;
+            color: #a5b4fc;
+        }
+
+        .progress-log {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            font-size: 0.8rem;
+            font-family: monospace;
+        }
+
+        .progress-log.active {
+            display: block;
+        }
+
+        .log-line {
+            padding: 3px 0;
+            color: #64748b;
+        }
+
+        .log-line.highlight {
+            color: #a5b4fc;
+        }
+
+        .log-line.success {
+            color: #34d399;
+        }
+
+        .log-line.warning {
+            color: #fbbf24;
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .results-header {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #e2e8f0;
+        }
+
+        .job-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .job-card:hover {
+            border-color: #6366f1;
+        }
+
+        .job-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .job-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .job-company {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        .score-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .score-high {
+            background: #064e3b;
+            color: #34d399;
+        }
+
+        .score-mid {
+            background: #451a03;
+            color: #fbbf24;
+        }
+
+        .score-low {
+            background: #450a0a;
+            color: #f87171;
+        }
+
+        .job-meta {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .meta-item {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .meta-item span {
+            color: #94a3b8;
+        }
+
+        .skills-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .skill-tag {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .skill-matched {
+            background: #1e3a5f;
+            color: #60a5fa;
+        }
+
+        .skill-missing {
+            background: #3b1f1f;
+            color: #f87171;
+        }
+
+        .job-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .btn-secondary {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #94a3b8;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: #6366f1;
+            color: #a5b4fc;
+        }
+
+        .btn-link {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-link:hover {
+            border-color: #6366f1;
+            color: #a5b4fc;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .modal {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 24px;
+            width: 100%;
+            max-width: 700px;
+            margin-top: 40px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 1.5rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: #e2e8f0;
+        }
+
+        .modal-content {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 16px;
+            white-space: pre-wrap;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .copy-btn {
+            margin-top: 12px;
+            padding: 8px 16px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #475569;
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <header>
+            <h1>🤖 AI Job Agent</h1>
+            <p>Finds jobs, matches your skills, tailors your resume — automatically</p>
+        </header>
+
+        <!-- Input Form -->
+        <div class="card">
+            <h2> Search Configuration</h2>
+
+            <div class="form-group">
+                <label>Your Resume</label>
+                <textarea 
+                    id="resume" 
+                    placeholder="Paste your full resume here. The more detail, the better the matching..."
+                ></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Job Title</label>
+                    <input type="text" id="jobTitle" placeholder="e.g. Python Developer" value="Python Developer"/>
+                </div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" id="location" placeholder="e.g. Mumbai" value="Mumbai"/>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Your Name</label>
+                    <input type="text" id="applicantName" placeholder="e.g. Pranav" value="Pranav"/>
+                </div>
+                <div class="form-group">
+                    <label>Match Threshold (%)</label>
+                    <input type="number" id="threshold" value="40" min="10" max="90"/>
+                </div>
+            </div>
+
+            <button class="btn-primary" id="startBtn" onclick="startPipeline()">
+                 Find & Match Jobs
+            </button>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar" id="statusBar">
+            ⏳ Initializing...
+        </div>
+
+        <!-- Progress Log -->
+        <div class="progress-log" id="progressLog"></div>
+
+        <!-- Results -->
+        <div class="results-section" id="resultsSection">
+            <div class="results-header" id="resultsHeader"></div>
+            <div id="jobCards"></div>
+        </div>
+
+    </div>
+
+    <!-- Modal for Resume/Cover Letter -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle"></div>
+                <button class="modal-close" onclick="closeModalDirect()">×</button>
+            </div>
+            <div class="modal-content" id="modalContent"></div>
+            <button class="copy-btn" onclick="copyModalContent()">📋 Copy to Clipboard</button>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentResults = [];
+        let eventSource = null;
+
+        function startPipeline() {
+            const resume = document.getElementById('resume').value.trim();
+            const jobTitle = document.getElementById('jobTitle').value.trim();
+            const location = document.getElementById('location').value.trim();
+            const applicantName = document.getElementById('applicantName').value.trim();
+            const threshold = document.getElementById('threshold').value;
+
+            if (!resume || !jobTitle || !location || !applicantName) {
+                alert('Please fill in all fields including your resume.');
+                return;
+            }
+
+            // Reset UI
+            currentResults = [];
+            document.getElementById('jobCards').innerHTML = '';
+            document.getElementById('resultsSection').classList.remove('active');
+            document.getElementById('progressLog').innerHTML = '';
+            document.getElementById('progressLog').classList.add('active');
+            document.getElementById('statusBar').classList.add('active');
+            document.getElementById('startBtn').disabled = true;
+
+            // Close previous connection if exists
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                job_title: jobTitle,
+                location: location,
+                resume: resume,
+                applicant_name: applicantName,
+                max_jobs: 5,
+                match_threshold: threshold
+            });
+
+            const url = `/api/pipeline?${params.toString()}`;
+
+            // Open SSE connection
+            eventSource = new EventSource(url);
+
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                handleEvent(data);
+            };
+
+            eventSource.onerror = function() {
+                addLog('Pipeline complete or connection closed.', 'warning');
+                document.getElementById('startBtn').disabled = false;
+                eventSource.close();
+            };
+        }
+
+        function handleEvent(data) {
+            const status = data.status;
+            const message = data.message;
+
+            updateStatus(message);
+
+            if (status === 'started') {
+                addLog(` ${message}`, 'highlight');
+            }
+            else if (status === 'scraping') {
+                addLog(` ${message}`, 'highlight');
+            }
+            else if (status === 'scraped') {
+                addLog(` ${message}`, 'success');
+            }
+            else if (status === 'analyzing') {
+                addLog(` ${message}`);
+            }
+            else if (status === 'analyzed') {
+                const score = data.data.score;
+                const color = score >= 70 ? 'success' : score >= 40 ? 'highlight' : 'warning';
+                addLog(` ${message}`, color);
+            }
+            else if (status === 'skipped') {
+                addLog(`⏭ ${message}`, 'warning');
+            }
+            else if (status === 'tailoring') {
+                addLog(` ${message}`, 'highlight');
+            }
+            else if (status === 'cover_letter') {
+                addLog(` ${message}`, 'highlight');
+            }
+            else if (status === 'completed_job') {
+                addLog(` ${message}`, 'success');
+            }
+            else if (status === 'done') {
+                addLog(` ${message}`, 'success');
+                updateStatus(` Done! Found ${data.data.total_results} matching jobs.`);
+                document.getElementById('startBtn').disabled = false;
+
+                if (data.data.results && data.data.results.length > 0) {
+                    currentResults = data.data.results;
+                    showResults(data.data.results);
+                } else {
+                    showEmptyState();
+                }
+
+                eventSource.close();
+            }
+            else if (status === 'error') {
+                addLog(`❌ ${message}`, 'warning');
+                document.getElementById('startBtn').disabled = false;
+            }
+        }
+
+        function updateStatus(message) {
+            document.getElementById('statusBar').textContent = message;
+        }
+
+        function addLog(message, type = '') {
+            const log = document.getElementById('progressLog');
+            const line = document.createElement('div');
+            line.className = `log-line ${type}`;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(line);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function showResults(results) {
+            const section = document.getElementById('resultsSection');
+            const header = document.getElementById('resultsHeader');
+            const container = document.getElementById('jobCards');
+
+            header.textContent = ` ${results.length} Matching Jobs Found`;
+            section.classList.add('active');
+
+            results.forEach((result, index) => {
+                const card = buildJobCard(result, index);
+                container.appendChild(card);
+            });
+        }
+
+        function showEmptyState() {
+            const section = document.getElementById('resultsSection');
+            const container = document.getElementById('jobCards');
+            section.classList.add('active');
+            document.getElementById('resultsHeader').textContent = 'No matching jobs found';
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">🔍</div>
+                    <p>Try lowering the match threshold or broadening your search.</p>
+                </div>
+            `;
+        }
+
+        function buildJobCard(result, index) {
+            const job = result.job;
+            const match = result.match;
+            const score = match.match_score;
+
+            const scoreClass = score >= 70 ? 'score-high' : score >= 40 ? 'score-mid' : 'score-low';
+            const scoreEmoji = score >= 70 ? '🟢' : score >= 40 ? '🟡' : '🔴';
+
+            const card = document.createElement('div');
+            card.className = 'job-card';
+
+            const matchedSkillsHTML = (match.matched_skills || [])
+                .map(s => `<span class="skill-tag skill-matched">${s}</span>`)
+                .join('');
+
+            const missingSkillsHTML = (match.missing_skills || []).slice(0, 4)
+                .map(s => `<span class="skill-tag skill-missing">${s}</span>`)
+                .join('');
+
+            card.innerHTML = `
+                <div class="job-card-header">
+                    <div>
+                        <div class="job-title">${job.title}</div>
+                        <div class="job-company">${job.company}</div>
+                    </div>
+                    <div class="score-badge ${scoreClass}">
+                        ${scoreEmoji} ${score}% Match
+                    </div>
+                </div>
+
+                <div class="job-meta">
+                    ${job.location ? `<div class="meta-item"> <span>${job.location}</span></div>` : ''}
+                    ${job.salary ? `<div class="meta-item"> <span>${job.salary}</span></div>` : ''}
+                    ${job.experience ? `<div class="meta-item"> <span>${job.experience}</span></div>` : ''}
+                    ${job.posted_date ? `<div class="meta-item"> <span>${job.posted_date}</span></div>` : ''}
+                </div>
+
+                <div style="font-size:0.8rem; color:#64748b; margin-bottom:8px;">
+                     Matched: ${matchedSkillsHTML || '<span style="color:#475569">none detected</span>'}
+                </div>
+
+                <div style="font-size:0.8rem; color:#64748b; margin-bottom:4px;">
+                     Missing: ${missingSkillsHTML || '<span style="color:#475569">none</span>'}
+                </div>
+
+                <div style="font-size:0.8rem; color:#94a3b8; margin-top:10px; padding:10px; background:#0f172a; border-radius:6px;">
+                     ${match.recommendation || ''}
+                </div>
+
+                <div class="job-actions">
+                    <button class="btn-secondary" onclick="showResume(${index})">
+                       Tailored Resume
+                    </button>
+                    <button class="btn-secondary" onclick="showCoverLetter(${index})">
+                        Cover Letter
+                    </button>
+                    <a class="btn-link" href="${job.url}" target="_blank">
+                        View Job
+                    </a>
+                </div>
+            `;
+
+            return card;
+        }
+
+        function showResume(index) {
+            const result = currentResults[index];
+            const resume = result.tailored_resume;
+            document.getElementById('modalTitle').textContent = 
+                ` Tailored Resume — ${result.job.title} at ${result.job.company}`;
+            document.getElementById('modalContent').textContent = 
+                resume.tailored_resume || 'Resume not available';
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+
+        function showCoverLetter(index) {
+            const result = currentResults[index];
+            const letter = result.cover_letter;
+            document.getElementById('modalTitle').textContent = 
+                ` Cover Letter — ${result.job.title} at ${result.job.company}`;
+            document.getElementById('modalContent').textContent = 
+                letter.cover_letter || 'Cover letter not available';
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+
+        function closeModal(event) {
+            if (event.target === document.getElementById('modalOverlay')) {
+                document.getElementById('modalOverlay').classList.remove('active');
+            }
+        }
+
+        function closeModalDirect() {
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+
+        function copyModalContent() {
+            const content = document.getElementById('modalContent').textContent;
+            navigator.clipboard.writeText(content).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = '✅ Copied!';
+                setTimeout(() => btn.textContent = '📋 Copy to Clipboard', 2000);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -2,20 +2,21 @@ from fastapi import FastAPI #help to fetch data
 from app.config import APP_NAME,APP_VERSION,DEBUG
 from app.routes import router
 
+from fastapi.staticfiles import StaticFiles #fastapi inbuilt static server
+from fastapi.responses import FileResponse # response type that send a file instead of json
+
 app=FastAPI(
     title=APP_NAME,
     version=APP_VERSION,
     debug=DEBUG
 )# fastapi uses to build auto-doc in /docs
+
+app.mount("/static",StaticFiles(directory="static"),name="static") # any request starts with static will serve file directly
+
 app.include_router(router,prefix="/api")
 @app.get("/")# its decorator takes fuction directly below it 
 def root():
-    return {
-        "message":f"Welcome to {APP_NAME}",
-        "version":APP_VERSION,
-        "status":"running",
-        "debug_mode":DEBUG
-    }
+    return FileResponse("static/index.html")
 
 @app.get("/health")
 def health_check():
@@ -37,5 +38,8 @@ SSE(server sent events)- one way connection
 use StreamingResponse which use yield to pause connection
 
 pipeline working
+
+aiofiles-fastapi needs this to read and send file asyncronously
+jinja2-a template engine it require to serving HTML files 
 
 '''
