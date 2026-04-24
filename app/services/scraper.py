@@ -13,6 +13,8 @@ def create_driver()-> webdriver.Chrome: #returns a configured chrome driver
     chrome_options.add_argument("--headless") #runs browser without ui
     chrome_options.add_argument("--no-sandbox") #disable sandboxing
     chrome_options.add_argument("--disable-dev-shm-usage")#fix shared meomeory usage 
+    chrome_options.add_argument("--disable-gpu") #servers dont have graphics cards so chrome not try to using gpu rendering
+    chrome_options.add_argument("--window-size=1920,1080")#set a fake screen size 
     chrome_options.add_argument("--disable-blink-features=AutomationControlled") #helps to avoid bot detection
     #disable extra detections
     chrome_options.add_experimental_option("excludeSwitches",["enable-automation"])
