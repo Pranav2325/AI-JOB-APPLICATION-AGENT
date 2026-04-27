@@ -41,5 +41,5 @@ pipeline working
 
 aiofiles-fastapi needs this to read and send file asyncronously
 jinja2-a template engine it require to serving HTML files 
-
+deployed
 '''
